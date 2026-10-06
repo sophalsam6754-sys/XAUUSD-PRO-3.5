@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06152d">
+<title>XAUUSD PRO V3.4</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#06152d;color:#eaf2ff;font-family:Arial,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:14px 14px 90px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.brand{font-size:22px;font-weight:900}.brand span{color:#f4c542}.sub{color:#91a5c3;font-size:12px;margin-top:3px}
+.live{padding:7px 10px;border-radius:20px;background:#083c2d;color:#65e2ad;font-weight:800;font-size:12px}
+.card{background:#0a1931;border:1px solid #19304f;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 8px 25px #0004}
+.controls{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+input,select,button{width:100%;border:0;border-radius:10px;padding:11px;background:#102442;color:#eaf2ff;outline:1px solid #203a60}
+button{font-weight:900;cursor:pointer;background:#1b5ed1}button:hover{filter:brightness(1.08)}
+.tf{display:flex;gap:6px;margin:10px 0}.tf button{background:#102442}.tf button.active{background:#1b5ed1}
+canvas{width:100%;height:360px;display:block;background:#06162d;border-radius:12px}
+.signal{padding:16px;text-align:center;border-radius:12px;font-size:27px;font-weight:900;margin-top:10px}
+.buy{color:#78f0ba;background:#073d2c}.sell{color:#ff9aa4;background:#4a111b}.wait{color:#ffe38b;background:#4a3b09}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.metric{background:#0d203b;border-radius:12px;padding:12px}
+.label{font-size:10px;color:#8ea2c0;text-transform:uppercase}.value{font-size:20px;font-weight:900;margin-top:5px}
+.strength{height:9px;background:#142944;border-radius:8px;overflow:hidden;margin-top:8px}.strength i{display:block;height:100%;width:0;background:#36d49a}
+.zone{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #17304e}
+.row:last-child{border-bottom:0}.muted{color:#91a5c3}.note{font-size:11px;color:#7f94b3;line-height:1.45}
+@media(max-width:750px){.controls{grid-template-columns:1fr 1fr}.grid{grid-template-columns:repeat(2,1fr)}canvas{height:300px}.brand{font-size:19px}}
+@media(max-width:430px){.controls{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.zone{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div><div class="brand">Au XAUUSD <span>PRO V3.4</span></div><div class="sub">BUY/SELL Strength · Entry Zone · Smart SL · TP1/TP2/TP3 · Trailing Stop</div></div><div class="live">● LIVE</div></header>
+
+<section class="card">
+<div class="controls">
+<input id="apiKey" type="password" placeholder="Twelve Data API Key">
+<select id="symbol"><option>XAU/USD</option><option>GOLD</option></select>
+<select id="tf"><option value="5min">5M</option><option value="15min">15M</option><option value="1h">1H</option><option value="4h">4H</option><option value="1day">1D</option></select>
+<select id="bars"><option>100</option><option selected>150</option><option>200</option></select>
+<button id="update">UPDATE</button>
+</div>
+<div class="tf"><button data-tf="5min" class="active">5M</button><button data-tf="15min">15M</button><button data-tf="1h">1H</button><button data-tf="4h">4H</button><button data-tf="1day">1D</button></div>
+<canvas id="chart"></canvas>
+<div id="signal" class="signal wait">● WAIT</div>
+</section>
+
+<section class="grid">
+<div class="metric"><div class="label">BUY Strength</div><div class="value" id="buy">—</div><div class="strength"><i id="buyBar"></i></div></div>
+<div class="metric"><div class="label">SELL Strength</div><div class="value" id="sell">—</div><div class="strength"><i id="sellBar"></i></div></div>
+<div class="metric"><div class="label">Signal</div><div class="value" id="sig2">WAIT</div></div>
+<div class="metric"><div class="label">Risk / Reward</div><div class="value" id="rr">—</div></div>
+</section>
+
+<section class="card">
+<h3>📌 Trade Plan</h3>
+<div class="grid">
+<div class="metric"><div class="label">Entry</div><div class="value" id="entry">—</div></div>
+<div class="metric"><div class="label">Entry Zone</div><div class="value" id="entryZone">—</div></div>
+<div class="metric"><div class="label">Smart SL</div><div class="value" id="sl">—</div></div>
+<div class="metric"><div class="label">Trailing Stop</div><div class="value" id="trail">—</div></div>
+<div class="metric"><div class="label">TP1</div><div class="value" id="tp1">—</div></div>
+<div class="metric"><div class="label">TP2</div><div class="value" id="tp2">—</div></div>
+<div class="metric"><div class="label">TP3</div><div class="value" id="tp3">—</div></div>
+<div class="metric"><div class="label">ATR 14</div><div class="value" id="atr">—</div></div>
+</div>
+</section>
+
+<section class="card">
+<h3>📊 Confirmation</h3>
+<div class="row"><span class="muted">EMA 9 / 21</span><b id="ema">—</b></div>
+<div class="row"><span class="muted">RSI 14</span><b id="rsi">—</b></div>
+<div class="row"><span class="muted">15M Confirmation</span><b id="c15">—</b></div>
+<div class="row"><span class="muted">1H Confirmation</span><b id="c1h">—</b></div>
+<div class="row"><span class="muted">Last Price</span><b id="price">—</b></div>
+<p class="note">V3.4 is an analysis/signal tool, not a guarantee of profit. Live data requires a valid Twelve Data API key. Without a key, the app uses demo data.</p>
+</section>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06152d">
+<title>XAUUSD PRO V3.3</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#06152d;color:#eaf2ff;font-family:Arial,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:14px 14px 90px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.brand{font-size:22px;font-weight:900}.brand span{color:#f4c542}.sub{color:#91a5c3;font-size:12px;margin-top:3px}
+.live{padding:7px 10px;border-radius:20px;background:#083c2d;color:#65e2ad;font-weight:800;font-size:12px}
+.card{background:#0a1931;border:1px solid #19304f;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 8px 25px #0004}
+.controls{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+input,select,button{width:100%;border:0;border-radius:10px;padding:11px;background:#102442;color:#eaf2ff;outline:1px solid #203a60}
+button{font-weight:900;cursor:pointer;background:#1b5ed1}button:hover{filter:brightness(1.08)}
+.tf{display:flex;gap:6px;margin:10px 0}.tf button{background:#102442}.tf button.active{background:#1b5ed1}
+canvas{width:100%;height:360px;display:block;background:#06162d;border-radius:12px}
+.signal{padding:16px;text-align:center;border-radius:12px;font-size:27px;font-weight:900;margin-top:10px}
+.buy{color:#78f0ba;background:#073d2c}.sell{color:#ff9aa4;background:#4a111b}.wait{color:#ffe38b;background:#4a3b09}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.metric{background:#0d203b;border-radius:12px;padding:12px}
+.label{font-size:10px;color:#8ea2c0;text-transform:uppercase}.value{font-size:20px;font-weight:900;margin-top:5px}
+.strength{height:9px;background:#142944;border-radius:8px;overflow:hidden;margin-top:8px}.strength i{display:block;height:100%;width:0;background:#36d49a}
+.zone{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #17304e}
+.row:last-child{border-bottom:0}.muted{color:#91a5c3}.note{font-size:11px;color:#7f94b3;line-height:1.45}
+@media(max-width:750px){.controls{grid-template-columns:1fr 1fr}.grid{grid-template-columns:repeat(2,1fr)}canvas{height:300px}.brand{font-size:19px}}
+@media(max-width:430px){.controls{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.zone{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div><div class="brand">Au XAUUSD <span>PRO V3.3</span></div><div class="sub">BUY/SELL Strength · Entry Zone · Smart SL · TP1/TP2/TP3 · Trailing Stop</div></div><div class="live">● LIVE</div></header>
+
+<section class="card">
+<div class="controls">
+<input id="apiKey" type="password" placeholder="Twelve Data API Key">
+<select id="symbol"><option>XAU/USD</option><option>GOLD</option></select>
+<select id="tf"><option value="5min">5M</option><option value="15min">15M</option><option value="1h">1H</option><option value="4h">4H</option><option value="1day">1D</option></select>
+<select id="bars"><option>100</option><option selected>150</option><option>200</option></select>
+<button id="update">UPDATE</button>
+</div>
+<div class="tf"><button data-tf="5min" class="active">5M</button><button data-tf="15min">15M</button><button data-tf="1h">1H</button><button data-tf="4h">4H</button><button data-tf="1day">1D</button></div>
+<canvas id="chart"></canvas>
+<div id="signal" class="signal wait">● WAIT</div>
+</section>
+
+<section class="grid">
+<div class="metric"><div class="label">BUY Strength</div><div class="value" id="buy">—</div><div class="strength"><i id="buyBar"></i></div></div>
+<div class="metric"><div class="label">SELL Strength</div><div class="value" id="sell">—</div><div class="strength"><i id="sellBar"></i></div></div>
+<div class="metric"><div class="label">Signal</div><div class="value" id="sig2">WAIT</div></div>
+<div class="metric"><div class="label">Risk / Reward</div><div class="value" id="rr">—</div></div>
+</section>
+
+<section class="card">
+<h3>📌 Trade Plan</h3>
+<div class="grid">
+<div class="metric"><div class="label">Entry</div><div class="value" id="entry">—</div></div>
+<div class="metric"><div class="label">Entry Zone</div><div class="value" id="entryZone">—</div></div>
+<div class="metric"><div class="label">Smart SL</div><div class="value" id="sl">—</div></div>
+<div class="metric"><div class="label">Trailing Stop</div><div class="value" id="trail">—</div></div>
+<div class="metric"><div class="label">TP1</div><div class="value" id="tp1">—</div></div>
+<div class="metric"><div class="label">TP2</div><div class="value" id="tp2">—</div></div>
+<div class="metric"><div class="label">TP3</div><div class="value" id="tp3">—</div></div>
+<div class="metric"><div class="label">ATR 14</div><div class="value" id="atr">—</div></div>
+</div>
+</section>
+
+<section class="card">
+<h3>📊 Confirmation</h3>
+<div class="row"><span class="muted">EMA 9 / 21</span><b id="ema">—</b></div>
+<div class="row"><span class="muted">RSI 14</span><b id="rsi">—</b></div>
+<div class="row"><span class="muted">15M Confirmation</span><b id="c15">—</b></div>
+<div class="row"><span class="muted">1H Confirmation</span><b id="c1h">—</b></div>
+<div class="row"><span class="muted">Last Price</span><b id="price">—</b></div>
+<p class="note">V3.3 is an analysis/signal tool, not a guarantee of profit. Live data requires a valid Twelve Data API key. Without a key, the app uses demo data.</p>
+</section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let candles=[], tf="5min", apiKey=localStorage.getItem("xau_v33_key")||"";
+$("apiKey").value=apiKey;
+function ema(a,n){if(!a.length)return 0;let k=2/(n+1),e=a[0];for(let i=1;i<a.length;i++)e=a[i]*k+e*(1-k);return e}
+function rsi(a,n=14){if(a.length<n+1)return 50;let g=0,l=0;for(let i=a.length-n;i<a.length;i++){let d=a[i]-a[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}return l?100-100/(1+g/l):100}
+function atr(cs,n=14){if(cs.length<n)return 0;let s=0;for(let i=cs.length-n;i<cs.length;i++)s+=cs[i].h-cs[i].l;return s/n}
+function demo(){let p=4180; candles=[];for(let i=0;i<150;i++){let o=p,c=o+(Math.random()-.47)*3,h=Math.max(o,c)+Math.random()*2,l=Math.min(o,c)-Math.random()*2;candles.push({o,c,h,l});p=c} updateAllData();draw()}
+function draw(){let c=$("chart"),x=c.getContext("2d"),d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;x.scale(d,d);x.fillStyle="#06162d";x.fillRect(0,0,w,h);if(!candles.length)return;
+let hi=Math.max(...candles.map(v=>v.h)),lo=Math.min(...candles.map(v=>v.l)),pad=20,sx=(w-pad*2)/Math.max(candles.length-1,1),sy=(h-pad*2)/(hi-lo||1);
+for(let i=0;i<6;i++){let y=pad+i*(h-pad*2)/5;x.strokeStyle="#17314f";x.beginPath();x.moveTo(0,y);x.lineTo(w,y);x.stroke()}
+candles.forEach((v,i)=>{let xx=pad+i*sx,yo=pad+(hi-v.o)*sy,yc=pad+(hi-v.c)*sy,yh=pad+(hi-v.h)*sy,yl=pad+(hi-v.l)*sy;x.strokeStyle=v.c>=v.o?"#35d39a":"#f06a75";x.beginPath();x.moveTo(xx,yh);x.lineTo(xx,yl);x.stroke();x.fillStyle=x.strokeStyle;x.fillRect(xx-2,Math.min(yo,yc),4,Math.max(2,Math.abs(yc-yo)))});
+function line(vals,color){x.strokeStyle=color;x.lineWidth=2;x.beginPath();vals.forEach((v,i)=>{let xx=pad+i*sx,yy=pad+(hi-v)*sy;i?x.lineTo(xx,yy):x.moveTo(xx,yy)});x.stroke()}
+let cls=candles.map(v=>v.c);let e9=[],e21=[];for(let i=0;i<cls.length;i++){e9.push(ema(cls.slice(0,i+1),9));e21.push(ema(cls.slice(0,i+1),21))}line(e9,"#f4c542");line(e21,"#7da7ff")}
+function updateAllData(){
+let cls=candles.map(v=>v.c),last=cls.at(-1),e9=ema(cls,9),e21=ema(cls,21),R=rsi(cls),A=atr(candles),mac=ema(cls,12)-ema(cls,26);
+let trendBuy=e9>e21?25:0,trendSell=e9<e21?25:0,rBuy=R>50?20:0,rSell=R<50?20:0,mBuy=mac>0?20:0,mSell=mac<0?20:0,momBuy=last>e21?15:0,momSell=last<e21?15:0;
+let buy=Math.min(100,trendBuy+rBuy+mBuy+momBuy+(R>55?20:0)),sell=Math.min(100,trendSell+rSell+mSell+momSell+(R<45?20:0));
+let sig=buy>=60&&buy>sell?"BUY":sell>=60&&sell>buy?"SELL":"WAIT",risk=A*1.3;
+let sl=sig==="BUY"?Math.min(...candles.slice(-10).map(v=>v.l),last-risk):sig==="SELL"?Math.max(...candles.slice(-10).map(v=>v.h),last+risk):last;
+let rd=Math.abs(last-sl)||A*1.3;let dir=sig==="SELL"?-1:1;
+if(sig==="WAIT"){sl=last-risk;rd=risk;dir=buy>=sell?1:-1}
+let tp1=last+dir*rd*1,tp2=last+dir*rd*2,tp3=last+dir*rd*3,trail=last-dir*A*1.0;
+$("buy").textContent=buy.toFixed(0)+"%";$("sell").textContent=sell.toFixed(0)+"%";$("buyBar").style.width=buy+"%";$("sellBar").style.width=sell+"%";
+$("sig2").textContent=sig;$("sig2").style.color=sig==="BUY"?"#65e2ad":sig==="SELL"?"#ff7884":"#ffe38b";
+$("signal").textContent="● "+sig;$("signal").className="signal "+sig.toLowerCase();
+$("entry").textContent=last.toFixed(2);$("entryZone").textContent=(last-A*.35).toFixed(2)+" – "+(last+A*.35).toFixed(2);$("sl").textContent=sl.toFixed(2);
+$("tp1").textContent=tp1.toFixed(2);$("tp2").textContent=tp2.toFixed(2);$("tp3").textContent=tp3.toFixed(2);$("trail").textContent=trail.toFixed(2);$("atr").textContent=A.toFixed(2);$("rr").textContent="1 : 1 / 2 / 3";
+$("ema").textContent=e9.toFixed(2)+" / "+e21.toFixed(2);$("rsi").textContent=R.toFixed(1);$("price").textContent=last.toFixed(2);
+$("c15").textContent=e9>e21?"BULLISH":"BEARISH";$("c1h").textContent=mac>0?"BULLISH":"BEARISH";
+}
+async function live(){if(!apiKey){demo();return}try{let u=`https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=${tf}&outputsize=${$("bars").value}&apikey=${encodeURIComponent(apiKey)}`;let r=await fetch(u),j=await r.json();if(!j.values)throw Error(j.message||"API error");candles=j.values.reverse().map(v=>({o:+v.open,c:+v.close,h:+v.high,l:+v.low}));updateAllData();draw()}catch(e){demo();$("signal").textContent="● DEMO — LIVE DATA ERROR"}}
+$("update").onclick=()=>{apiKey=$("apiKey").value.trim();localStorage.setItem("xau_v33_key",apiKey);live()};
+document.querySelectorAll(".tf button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tf button").forEach(x=>x.classList.remove("active"));b.classList.add("active");tf=b.dataset.tf;$("tf").value=tf;live()});
+$("tf").onchange=e=>{tf=e.target.value;document.querySelectorAll(".tf button").forEach(x=>x.classList.toggle("active",x.dataset.tf===tf));live()};
+window.onresize=draw;live();setInterval(live,30000);
+</script>
+</body>
+</html>
